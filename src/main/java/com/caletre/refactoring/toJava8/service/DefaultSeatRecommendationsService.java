@@ -6,24 +6,24 @@ import com.caletre.refactoring.toJava8.model.ShowTime;
 public class DefaultSeatRecommendationsService implements SeatRecommendationsService {
 
     public Seat[] recommendSeats(ShowTime showTime, int quantityOfSeats) {
-        // We could change the SeatsSelector interface to have no parameters and use the external method variables
-        // instead
-        SeatsSelector selector = (allSeats, internalQuantityOfSeats) -> {
-            Seat[] currentBestSeats = new Seat[0];
-
-            for(int row = 0; row < allSeats.length; ++row) {
-                for(int column = 0; column < allSeats[row].length; ++column) {
-                    Seat[] possibleBetterGroup = getSeatsGroup(row, column, allSeats, internalQuantityOfSeats);
-                    if(getPreferencePoints(possibleBetterGroup) > getPreferencePoints(currentBestSeats)) {
-                        currentBestSeats = possibleBetterGroup;
-                    }
-                }
-            }
-
-            return currentBestSeats;
-        };
+        SeatsSelector selector = this::getBest;
 
         return selector.getBest(showTime.getSeats(), quantityOfSeats);
+    }
+
+    private Seat[] getBest(Seat[][] allSeats, int internalQuantityOfSeats) {
+        Seat[] currentBestSeats = new Seat[0];
+
+        for(int row = 0; row < allSeats.length; ++row) {
+            for(int column = 0; column < allSeats[row].length; ++column) {
+                Seat[] possibleBetterGroup = getSeatsGroup(row, column, allSeats, internalQuantityOfSeats);
+                if(getPreferencePoints(possibleBetterGroup) > getPreferencePoints(currentBestSeats)) {
+                    currentBestSeats = possibleBetterGroup;
+                }
+            }
+        }
+
+        return currentBestSeats;
     }
 
     private int getPreferencePoints(Seat[] seatsGroup) {
