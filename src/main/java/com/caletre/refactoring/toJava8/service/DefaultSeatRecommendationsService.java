@@ -3,6 +3,8 @@ package com.caletre.refactoring.toJava8.service;
 import com.caletre.refactoring.toJava8.model.Seat;
 import com.caletre.refactoring.toJava8.model.ShowTime;
 
+import java.util.Arrays;
+
 public class DefaultSeatRecommendationsService implements SeatRecommendationsService {
 
     public Seat[] recommendSeats(ShowTime showTime, int quantityOfSeats) {
@@ -27,32 +29,23 @@ public class DefaultSeatRecommendationsService implements SeatRecommendationsSer
     }
 
     private int getPreferencePoints(Seat[] seatsGroup) {
-        int preferencePoints = 0;
-
-        for(int seatIndex = 0; seatIndex < seatsGroup.length; ++seatIndex) {
-            if(seatsGroup[seatIndex] == null
-                    || seatsGroup[seatIndex].isAisle()
-                    || seatsGroup[seatIndex].isBooked()) {
-                return 0;
-            }
-
-            preferencePoints += seatsGroup[seatIndex].getPreferencePoints();
+        if(seatsGroup.length == 0
+                || Arrays.stream(seatsGroup).anyMatch(seat -> seat == null || seat.isAisle() || seat.isBooked())) {
+            return 0;
         }
 
-        return preferencePoints;
+        return Arrays.stream(seatsGroup)
+                .map(Seat::getPreferencePoints)
+                .reduce((preferencePoints, accumulator) -> preferencePoints + accumulator)
+                .get();
     }
 
     private Seat[] getSeatsGroup(int targetRow, int startingColumn, Seat[][] allSeats, int quantityOfSeats) {
-        Seat[] seatGroup = new Seat[quantityOfSeats];
-
         if(startingColumn + quantityOfSeats >= allSeats[targetRow].length){
-            return seatGroup;
+            return new Seat[quantityOfSeats];
         }
 
-        for (int seatIndex = 0; seatIndex < quantityOfSeats; ++seatIndex) {
-            seatGroup[seatIndex] = allSeats[targetRow][startingColumn + seatIndex];
-        }
-
-        return seatGroup;
+        return Arrays.stream(allSeats[targetRow], startingColumn, startingColumn + quantityOfSeats)
+                .toArray(Seat[]::new);
     }
 }
